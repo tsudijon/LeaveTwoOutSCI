@@ -10,7 +10,6 @@ library(doParallel)
 
 source("reunification_helper.R")
 countries = read.csv('german_reunification.csv')
-countries$country = as.character(countries$country)
 
 ### Take in arguments ###
 arguments <- commandArgs(trailingOnly=TRUE)
@@ -29,11 +28,14 @@ if (length(arguments) != 4) {
 time.periods = 2003 - 1960 + 1
 T0 = 1990 - 1960 + 1 #onset of treatment
 
+
 # parameters below for testing purposes
-size.resampled.dataset = 7
+# parameters below for testing purposes
+size.resampled.dataset = 6
 alpha = 0.05
-tau = -3600 # 1sd is 3600, roughly
+tau = -3600
 mc.samples = 2
+
 
 size.resampled.dataset = as.integer(arguments[1])
 alpha = as.numeric(arguments[2])
@@ -49,7 +51,8 @@ cores = detectCores()
 cl = makeCluster(cores[1]-3) #not to overload your computer
 registerDoParallel(cl)
 
-states = c(1:2,4:38)
+
+country.code = unique(countries$code)[-7] # exclude West Germany
 
 ### Run MC simulation in parallel ###
 simulation_results <- foreach(mc.run = 1:mc.samples,
@@ -66,21 +69,21 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                 inexact.RMSPE.pvalue.dataset = rep(0,size.resampled.dataset)
                                 
                                 ### resample new dataset ###
-                                new.index = sample(states, size.resampled.dataset, replace = FALSE) 
+                                new.index = sample(country.code, size.resampled.dataset, replace = FALSE) 
                                 
                                 for (tu.index in 1:length(new.index)) {
                                   ### create new copy of data
                                   new.reunification.data <- countries
-                                  new.reunification.data <- new.reunification.data[new.reunification.data$stateno %in% new.index,]
+                                  new.reunification.data <- new.reunification.data[new.reunification.data$code %in% new.index,]
                                   
                                   ### this will be the new treated unit. ###
                                   treatment.unit = new.index[tu.index]   
                                   
                                   ### update the dataset with fake treatment ###
-                                  true.values = new.reunification.data[new.reunification.data$stateno == treatment.unit,
+                                  true.values = new.reunification.data[new.reunification.data$code == treatment.unit,
                                                                  c('gdp','year')]
                                   true.treatment.values = rep(tau,time.periods)
-                                  mask = (new.reunification.data$stateno == treatment.unit) & (new.reunification.data$year >= 1990)
+                                  mask = (new.reunification.data$code == treatment.unit) & (new.reunification.data$year >= 1990)
                                   new.reunification.data[mask, 'gdp'] = 
                                     new.reunification.data[mask, 'gdp'] + tau # just for the evaluation of power
                                   

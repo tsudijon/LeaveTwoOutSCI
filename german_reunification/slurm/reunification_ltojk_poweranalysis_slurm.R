@@ -10,7 +10,16 @@ library(doParallel)
 
 source("reunification_helper.R")
 countries = read.csv('german_reunification.csv')
-countries$country = as.character(countries$country)
+
+# The following was applied to the above data, updating the data.
+### Fill missing data: will backfill for same country, for same variable
+#library(dplyr)
+#library(tidyr)
+
+#countries  <- countries  %>% group_by(code) %>%
+#  fill(c(infrate, trade, schooling, invest60, invest70,invest80, industry), .direction = "up") %>%
+#  fill(c(infrate, trade, schooling, invest60, invest70,invest80, industry), .direction = "down")
+#countries  <- data.frame(countries)
 
 ### Take in arguments ###
 arguments <- commandArgs(trailingOnly=TRUE)
@@ -21,14 +30,21 @@ if (length(arguments) != 4) {
   stop(sprintf("At least one argument must be supplied, there are %s args",length(arguments)), call.=FALSE)
 }
 
+
+######################################################################################
+######################################################################################
+######################################################################################
+
 ### Set the parameters for the analysis ###
 time.periods = 2003 - 1960 + 1
 T0 = 1990 - 1960 + 1 #onset of treatment
 
+
+
 # parameters below for testing purposes
-size.resampled.dataset = 7
+size.resampled.dataset = 14
 alpha = 0.05
-tau = -90
+tau = 0
 mc.samples = 2
 
 size.resampled.dataset = as.integer(arguments[1])
@@ -63,7 +79,7 @@ cores = detectCores()
 cl = makeCluster(cores[1]-2) #not to overload your computer
 registerDoParallel(cl)
 
-country.code = c(1:6,8:17) # exclude West Germany
+country.code = unique(countries$code)[-7] # exclude West Germany
 
 ### Run MC simulation in parallel ###
 simulation_results <- foreach(mc.run = 1:mc.samples,
@@ -81,7 +97,7 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                 power.minusc.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
                                 RMSPE.minusc.pvalue.dataset = rep(0,size.resampled.dataset)
                                 
-                                new.index = sample(countries, size.resampled.dataset, replace = FALSE) 
+                                new.index = sample(country.code, size.resampled.dataset, replace = FALSE) 
                                 
                                 for (tu.index in 1:length(new.index)) {
                                   
@@ -93,10 +109,10 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                   treatment.unit = new.index[tu.index]
                                   
                                   ### update the dataset with fake treatment ###
-                                  true.values = new.countries.data[new.countries.data$country == treatment.unit,
+                                  true.values = new.countries.data[new.countries.data$code == treatment.unit,
                                                                  c('gdp','year')]
                                   true.treatment.values = rep(tau,time.periods)
-                                  mask = (new.countries.data$stateno == treatment.unit) & (new.countries.data$year >= 1990)
+                                  mask = (new.countries.data$code == treatment.unit) & (new.countries.data$year >= 1990)
                                   new.countries.data[mask, 'gdp'] = 
                                     new.countries.data[mask, 'gdp'] + tau # just for the evaluation of power
                                   
@@ -123,14 +139,14 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                       
                                       ### get SC on LTO unit ###
                                       dataprep.out = reunification.sc.dataprep(new.countries.data, jackknife.lto.units[1], controls)
-                                      synth.out <- synth(data.prep.obj = dataprep.out, method = "BFGS")
+                                      synth.out <- synth(data.prep.obj = dataprep.out, method = "BFGS",quadopt = "LowRankQP")
                                       res1 <- dataprep.out$Y1plot - 
                                         (dataprep.out$Y0plot %*% synth.out$solution.w)
                                       RMSPE1 = mean(res1[(T0+1):time.periods]^2)/mean(res1[1:T0]^2)
                                       
                                       ### get SC on other LTO unit ###
                                       dataprep.out = reunification.sc.dataprep(new.countries.data, jackknife.lto.units[2], controls)
-                                      synth.out <- synth(data.prep.obj = dataprep.out, method = "BFGS")
+                                      synth.out <- synth(data.prep.obj = dataprep.out, method = "BFGS",quadopt = "LowRankQP")
                                       res2 <- dataprep.out$Y1plot - 
                                         (dataprep.out$Y0plot %*% synth.out$solution.w)
                                       RMSPE2 =mean(res2[(T0+1):time.periods]^2)/ mean(res2[1:T0]^2)
@@ -139,9 +155,9 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                       LTO.RMSPEs[pair.index] = max(RMSPE1, RMSPE2)
                                       
                                       ### run SC method on the actual treatment unit ###
-                                      dataprep.out = smoking.sc.dataprep(new.smoking.data, treatment.unit, controls)
+                                      dataprep.out = reunification.sc.dataprep(new.countries.data, treatment.unit, controls)
                                       
-                                      synth.out = synth(data.prep.obj = dataprep.out, method = "BFGS")
+                                      synth.out = synth(data.prep.obj = dataprep.out, method = "BFGS",quadopt = "LowRankQP")
                                       res = dataprep.out$Y1plot - 
                                         (dataprep.out$Y0plot %*% synth.out$solution.w)
                                       LTO.residual.on.newpoint[pair.index,] = abs(res)
@@ -170,7 +186,7 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                     p.values.minusc.over.time[t] = p.values.over.time[t] + lto.shift/(length(new.index.minus.treated) - 1)
                                   }
                                   
-                                  coverages.over.time = as.integer((true.values$cigsale <= ci.upper) & (true.values$cigsale >= ci.lower))
+                                  coverages.over.time = as.integer((true.values$gdp <= ci.upper) & (true.values$gdp >= ci.lower))
                                   coverages.per.dataset[tu.index, ] = coverages.over.time
                                   ci.lengths.per.dataset[tu.index, ] = ci.lengths.over.time
                                   p.values.per.dataset[tu.index, ] = p.values.over.time
