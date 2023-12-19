@@ -31,9 +31,9 @@ T0 = 1990 - 1960 + 1 #onset of treatment
 
 # parameters below for testing purposes
 # parameters below for testing purposes
-size.resampled.dataset = 6
+size.resampled.dataset = 14
 alpha = 0.05
-tau = -3600
+tau = -10800
 mc.samples = 2
 
 

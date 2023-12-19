@@ -44,7 +44,7 @@ T0 = 1990 - 1960 + 1 #onset of treatment
 # parameters below for testing purposes
 size.resampled.dataset = 14
 alpha = 0.05
-tau = 0
+tau = -50800
 mc.samples = 2
 
 size.resampled.dataset = as.integer(arguments[1])
