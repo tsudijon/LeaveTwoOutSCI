@@ -18,6 +18,10 @@ if (length(arguments) != 4) {
   stop(sprintf("At least one argument must be supplied, there are %s args",length(arguments)), call.=FALSE)
 }
 
+######################################################################################
+######################################################################################
+######################################################################################
+
 ### Set the parameters for the analysis ###
 time.periods = 1997-1955+1
 T0 = 1970 - 1955 + 1 #onset of treatment
@@ -51,17 +55,21 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
         
         power.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
         inexact.power.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
+        randomized.power.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
         
         p.values.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
         inexact.p.values.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
+        randomized.p.values.per.dataset = matrix(0,nrow = size.resampled.dataset, ncol = time.periods)
         
         RMSPE.pvalue.dataset = rep(0,size.resampled.dataset)
         inexact.RMSPE.pvalue.dataset = rep(0,size.resampled.dataset)
+        randomized.RMSPE.pvalue.dataset = rep(0,size.resampled.dataset)
         
         ### resample new dataset ###
         new.index = sample(c(2:16,18), size.resampled.dataset, replace = FALSE) 
         
-        for (tu.index in 1:length(new.index)) {
+        
+        for (tu.index in 1:length(new.index)) { # tu: treated unit
           ### create new copy of data
           new.basque.data <- basque
           new.basque.data <- new.basque.data[new.basque.data$regionno %in% new.index,]
@@ -106,21 +114,31 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
           
           observed.rmspe = mean(observed.value.over.time[(T0+1):time.periods]^2)/mean(observed.value.over.time[1:T0]^2)
           
-          ### analyze data to create p values, get power. ###
+          ### analyze data to create p values for each time period, get power. ###
           for (t in 1:time.periods) {
             p.values.per.dataset[tu.index,t] = 
               (sum( abs(LOO.residuals[,t]) >= abs(observed.value.over.time[t]) ) + 1)/length(new.index)
             
             inexact.p.values.per.dataset[tu.index,t] = 
               (sum( abs(LOO.residuals[,t]) >= abs(observed.value.over.time[t]) ))/length(new.index)
+            
+            randomized.p.values.per.dataset[tu.index,t] = 
+              p.values.per.dataset[tu.index,t] - runif(1)/length(new.index)
+            
           }
+
           
+          ### P-value via RMSPE statistic ###
           RMSPE.pvalue.dataset[tu.index] = (sum( LOO.RMSPEs > observed.rmspe) + 1)/length(new.index)
           inexact.RMSPE.pvalue.dataset[tu.index] = (sum( LOO.RMSPEs > observed.rmspe))/length(new.index)
+          randomized.RMSPE.pvalue.dataset[tu.index] = RMSPE.pvalue.dataset[tu.index] - runif(1)/length(new.index)
           
           power.per.dataset[tu.index ,] = as.integer(p.values.per.dataset[tu.index,] <= alpha)
           inexact.power.per.dataset[tu.index ,] = 
             as.integer(inexact.p.values.per.dataset[tu.index,] <= alpha)
+          randomized.power.per.dataset[tu.index ,] = 
+            as.integer(randomized.p.values.per.dataset[tu.index,] <= alpha)
+          
           
         }
         
@@ -131,10 +149,15 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
         inexact.power.over.time = colMeans(inexact.power.per.dataset)
         inexact.RMSPE.power = mean(inexact.RMSPE.pvalue.dataset <= alpha) 
         
+        randomized.power.over.time = colMeans(randomized.power.per.dataset)
+        randomized.RMSPE.power = mean(randomized.RMSPE.pvalue.dataset <= alpha) 
+        
         res = list(power.over.time, RMSPE.power,
-                   inexact.power.over.time, inexact.RMSPE.power)
+                   inexact.power.over.time, inexact.RMSPE.power,
+                   randomized.power.over.time, randomized.RMSPE.power)
         names(res) = c("power.over.time","RMSPE.power",
-                       "inexact.power.over.time","inexact.RMSPE.power")
+                       "inexact.power.over.time","inexact.RMSPE.power",
+                       "randomized.power.over.time","randomized.RMSPE.power")
         res
     }
 

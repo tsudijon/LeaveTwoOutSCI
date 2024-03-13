@@ -142,7 +142,7 @@ ggplot(df2, aes(x=as.factor(taus), y=value, fill=variable)) +
   ylab("Power") +
   scale_x_discrete(labels= c(-3,-2,-1,-0.5,0))
 
-plotname = sprintf("../Figures/reunification_RMSPE_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
+plotname = sprintf("../reunification_RMSPE_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
 dev.print(pdf, plotname)
 
 ### Power at a fixed time
@@ -172,13 +172,13 @@ ggplot(df2, aes(x=as.factor(taus), y=value, fill=variable)) +
                 position=position_dodge(.9)) + 
   #scale_fill_discrete(labels=c('Placebo','Inexact Placebo', 'LTO', 'Powered LTO')) +
   scale_fill_discrete(labels=c('Placebo','LTO')) +
-  ggtitle("German Reunification Data: Year 1996 difference, N = 30, alpha = 0.02") +
+  ggtitle("German Reunification Data: Year 1996 difference, N = 14, alpha = 0.05") +
   theme(plot.title = element_text(hjust = 0.5)) +
   xlab("Effect Sizes (standard deviations)") + 
   ylab("Power") +
   scale_x_discrete(labels= c(-3,-2,-1,-0.5,0))
 
-plotname = sprintf("../Figures/reunification_fixed_time_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
+plotname = sprintf("../reunification_fixed_time_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
 dev.print(pdf, plotname)
 
 
