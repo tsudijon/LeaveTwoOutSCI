@@ -4,10 +4,9 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-setwd("~/Projects/Research/statistics_research/synthetic controls/software")
 size.resampled.dataset = 30
 alpha = 0.02
-taus = c(0,-15,-30,-45,-60)
+taus = c(0,-30,-60,-90)
 mc.samples = 20
 
 ######################################################################################
@@ -112,7 +111,7 @@ inexact.power.std.over.time.Placebo = apply(inexact.powers.over.time.Placebo, c(
 library(reshape2)
 df1 <- data.frame(#power.mean.RMSPE.Placebo, 
                   inexact.power.mean.RMSPE.Placebo,
-                  #power.mean.RMSPE.LTO,
+                  power.mean.RMSPE.LTO,
                   power.minusc.mean.RMSPE.LTO,
                   taus)
 df2 <- melt(df1, id.vars='taus')
@@ -120,33 +119,111 @@ df2 <- melt(df1, id.vars='taus')
 
 sds = melt(data.frame(#power.std.RMSPE.Placebo,
                       inexact.power.std.RMSPE.Placebo,
-                      #power.std.RMSPE.LTO,
+                      power.std.RMSPE.LTO,
                       power.minusc.std.RMSPE.LTO,
                       taus), id.vars='taus')
 df2$sd = sds$value
 df2
 
+#################################################
+############ Set Colors #################
+#################################################
+
+methodColors <-
+  setNames( c('#a6cee3','#1f78b4','#b2df8a','#33a02c')
+            , c('power.mean.RMSPE.Placebo',
+                'inexact.power.mean.RMSPE.Placebo',
+                'power.mean.RMSPE.LTO',
+                'power.minusc.mean.RMSPE.LTO')  )
+
+methodNames <-   setNames( c('Naive Placebo','Appr. Placebo', 'Naive LTO','Powered LTO')
+                           , c('power.mean.RMSPE.Placebo',
+                               'inexact.power.mean.RMSPE.Placebo',
+                               'power.mean.RMSPE.LTO',
+                               'power.minusc.mean.RMSPE.LTO')  )
+
+
+#################################################
+############ Section 4 Plots #################
+#################################################
+
 library(ggplot2)
 ggplot(df2, aes(x=as.factor(taus), y=value, fill=variable)) +
   geom_bar(stat='identity', color = 'black', position=position_dodge()) +
-  geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width = 0.2,
-                position=position_dodge(.9)) + 
-  #scale_fill_discrete(labels=c('Placebo', 'Inexact Placebo', 'LTO', 'Powered LTO')) +
-  scale_fill_discrete(labels=c('Placebo', 'LTO')) +
-  ggtitle("Smoking Data: RMSPE, N = 30, alpha = 0.02") +
+  #geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width = 0.2,
+  #              position=position_dodge(.9)) + 
+  scale_fill_manual(values = methodColors,name = "Method", labels=methodNames) +
+  theme_bw() +
+  ggtitle("Prop. 99 Data: RMSPE, N = 30, alpha = 0.02") +
   theme(plot.title = element_text(hjust = 0.5)) +
   xlab("Effect Sizes (standard deviations)") + 
   ylab("Power") +
-  scale_x_discrete(labels= c(-3,-2,-1,-0.5,0))
+  scale_x_discrete(labels= c(-3,-2,-1,0)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.9))  
 
-plotname = sprintf("../Figures/smoking_RMSPE_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
-dev.print(pdf, plotname)
 
+#plotname = sprintf("../Figures/smoking_RMSPE_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
+plotname = "smoking_rmspe_n30_alpha0.02.png"
+dev.print(png, plotname, width = 500, height = 400)
+
+#################################################
+############ Introduction Plots #################
+#################################################
+
+methodNames <-   setNames( c('Naive Placebo','Appr. Placebo', 'LTO','Powered LTO')
+                           , c('power.mean.RMSPE.Placebo',
+                               'inexact.power.mean.RMSPE.Placebo',
+                               'power.mean.RMSPE.LTO',
+                               'power.minusc.mean.RMSPE.LTO')  )
+
+df1 <- data.frame(#power.mean.RMSPE.Placebo, 
+  inexact.power.mean.RMSPE.Placebo,
+  power.mean.RMSPE.LTO,
+  #power.minusc.mean.RMSPE.LTO,
+  taus)
+df2 <- melt(df1, id.vars='taus')
+
+
+sds = melt(data.frame(#power.std.RMSPE.Placebo,
+  inexact.power.std.RMSPE.Placebo,
+  power.std.RMSPE.LTO,
+  #power.minusc.std.RMSPE.LTO,
+  taus), id.vars='taus')
+df2$sd = sds$value
+df2
+
+df2$variable <- as.factor(df2$variable)
+
+
+ggplot(df2, aes(x=as.factor(taus), y=value, fill=variable )) +
+  geom_bar(stat='identity', color = 'black', position=position_dodge()) +
+  #geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width = 0.2,
+  #              position=position_dodge(.9)) + 
+  #scale_fill_discrete(labels=c('Exact Placebo', 'Appr. Placebo', 'Naive LTO', 'Powered LTO')) + +
+  scale_fill_manual(values = methodColors,name = "Method", labels=methodNames) +
+  theme_bw() +
+  ggtitle("Prop. 99 Data: RMSPE, N = 30, alpha = 0.02") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Effect Sizes (standard deviations)") + 
+  ylab("Power") +
+  scale_x_discrete(labels= c(-3,-2,-1,0)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.9)) 
+
+#plotname = sprintf("../Figures/smoking_RMSPE_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
+plotname = "smoking_rmspe_n30_alpha0.02_intro.png"
+dev.print(png, plotname, width = 500, height = 400)
+
+#################################################
 ### Power at a fixed time
+#################################################
+
+###############################################################
+############# Plotting Colors #################################
+###############################################################
 time = 31
-df1 <- data.frame(#power.mean.over.time.Placebo[,time], 
+df1 <- data.frame(power.mean.over.time.Placebo[,time], 
                   inexact.power.mean.over.time.Placebo[,time],
-                  #power.mean.over.time.LTO[,time],
+                  power.mean.over.time.LTO[,time],
                   power.minusc.mean.over.time.LTO[,time],
   taus)
 
@@ -154,36 +231,67 @@ df1 <- data.frame(#power.mean.over.time.Placebo[,time],
 df2 <- melt(df1, id.vars='taus')
 
 
-sds = melt(data.frame(#power.std.over.time.Placebo[,time],
+sds = melt(data.frame(power.std.over.time.Placebo[,time],
                       inexact.power.std.over.time.Placebo[,time],
-                      #power.std.over.time.LTO[,time],
+                      power.std.over.time.LTO[,time],
                       power.minusc.std.over.time.LTO[,time],
   taus), id.vars='taus')
+df2$sd = sds$value
+df2
+
+methodColors <-
+  setNames( c('#a6cee3','#1f78b4','#b2df8a','#33a02c')
+            , unique(df2$variable)  )
+
+methodNames <-   setNames( c('Naive Placebo','Appr. Placebo', 'Naive LTO','Powered LTO')
+                           , unique(df2$variable)  )
+
+###############################################################
+############# Plotting #################################
+###############################################################
+
+time = 31
+df1 <- data.frame(#power.mean.over.time.Placebo[,time], 
+                  inexact.power.mean.over.time.Placebo[,time],
+                  power.mean.over.time.LTO[,time],
+                  power.minusc.mean.over.time.LTO[,time],
+                  taus)
+
+df2 <- melt(df1, id.vars='taus')
+
+
+sds = melt(data.frame(#power.std.over.time.Placebo[,time],
+                      inexact.power.std.over.time.Placebo[,time],
+                      power.std.over.time.LTO[,time],
+                      power.minusc.std.over.time.LTO[,time],
+                      taus), id.vars='taus')
 df2$sd = sds$value
 df2
 
 library(ggplot2)
 ggplot(df2, aes(x=as.factor(taus), y=value, fill=variable)) +
   geom_bar(stat='identity', color = 'black', position=position_dodge()) +
-  geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width = 0.2,
-                position=position_dodge(.9)) + 
-  #scale_fill_discrete(labels=c('Placebo','Inexact Placebo', 'LTO', 'Powered LTO')) +
-  scale_fill_discrete(labels=c('Placebo','LTO')) +
-  ggtitle("Smoking Data: Year 2000 difference, N = 30, alpha = 0.02") +
+  #geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width = 0.2,
+  #              position=position_dodge(.9)) + 
+  scale_fill_manual(values = methodColors, name = "Method", labels=methodNames) +
+  theme_bw() +
+  ggtitle("Prop. 99 Data: Year 2000 difference, N = 30, alpha = 0.02") +
   theme(plot.title = element_text(hjust = 0.5)) +
   xlab("Effect Sizes (standard deviations)") + 
   ylab("Power") +
-  scale_x_discrete(labels= c(-3,-2,-1,-0.5,0))
+  scale_x_discrete(labels= c(-3,-2,-1,0)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) 
 
-plotname = sprintf("../Figures/smoking_fixed_time_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
-dev.print(pdf, plotname)
+#plotname = sprintf("../Figures/smoking_fixed_time_N%d_alpha%.2f.pdf", size.resampled.dataset,alpha )
+plotname = "smoking_fixedtime_n30_alpha0.02.png"
+dev.print(png, plotname, width = 500, height = 400)
 
 
 ### Power over time ###
 
 ### Higher Tau ###
 time = 27:31
-idx = 1
+idx = 4
 df1 <- data.frame(#power.mean.over.time.Placebo[idx,time], 
                   inexact.power.mean.over.time.Placebo[idx,time],
                   power.mean.over.time.LTO[idx,time],
@@ -204,12 +312,13 @@ ggplot(df2, aes(x=as.factor(time), y=value, fill=variable)) +
   geom_bar(stat='identity', color = 'black', position=position_dodge()) +
   geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width = 0.2,
                 position=position_dodge(.9))+ 
-  scale_fill_discrete(labels=c('Placebo', 'LTO', 'Powered LTO')) +
-  ggtitle(sprintf("Smoking Data: Effect Size: %.1f, N = 15, alpha = 0.1",taus[idx])) +
+  scale_fill_discrete(name = "Method",labels=c('Placebo', 'LTO', 'Powered LTO')) +
+  ggtitle(sprintf("Smoking Data: Effect Size: %.1f, N = 15, alpha = 0.02",taus[idx])) +
   theme(plot.title = element_text(hjust = 0.5)) +
   xlab("Year") + 
   ylab("Power")+
-  scale_x_discrete(labels= 1969+time)
+  scale_x_discrete(labels= 1969+time) 
+  #coord_cartesian(ylim=c(0,0.04))
 
 plotname = sprintf("../Figures/smoking_overtime_N%d_alpha%.2f_tau%.2f.pdf", size.resampled.dataset,alpha,taus[idx] )
 dev.print(pdf,plotname)
