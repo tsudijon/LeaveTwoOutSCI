@@ -30,11 +30,10 @@ T0 = 1990 - 1960 + 1 #onset of treatment
 
 
 # parameters below for testing purposes
-# parameters below for testing purposes
 size.resampled.dataset = 14
 alpha = 0.05
-tau = -10800
-mc.samples = 2
+tau = -100800
+mc.samples = 3
 
 
 size.resampled.dataset = as.integer(arguments[1])
@@ -168,6 +167,6 @@ stopCluster(cl)
 ######################################################################################
 ### save the results ###
 
-sim_results_file = sprintf("~/Results/SyntheticControls/reunification_power_analysis_placebo_test_tau%.1f_alpha%.2f_N%d.RData",
+sim_results_file = sprintf("~/Results/SyntheticControls/reunification_power_analysis_random_placebo_test_tau%.1f_alpha%.2f_N%d.RData",
                            tau, alpha, size.resampled.dataset)
 save(simulation_results, file = sim_results_file)

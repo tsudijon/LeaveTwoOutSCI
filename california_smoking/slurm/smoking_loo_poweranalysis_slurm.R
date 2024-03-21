@@ -35,6 +35,16 @@ alpha = as.numeric(arguments[2])
 tau = as.numeric(arguments[3])
 mc.samples = as.integer(arguments[4])
 
+### calculate conditional Type I error guarantee
+type.I.error <- function(alpha){
+  n = size.resampled.dataset
+  Q = (1-alpha)*(n-1)*(n-2)
+  f = 0.5*(3 - 3/n - sqrt(9*(1 - 1/n)^2 - 12*(1 - 2/n + 2/(3*n^2)- Q/n^2 ) ) )
+  floor(n*f)/n
+}
+
+LOO.alpha = (type.I.error(alpha)*size.resampled.dataset)/(2*size.resampled.dataset - 2) - 0.001 
+
 ######################################################################################
 ######################################################################################
 ######################################################################################
@@ -110,7 +120,7 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
                                 }
                                 
                                 ### summarize data over the resamples of the original Basque data. ###
-                                RMSPE.power = mean(RMSPE.pvalue.dataset < alpha)
+                                RMSPE.power = mean(RMSPE.pvalue.dataset < LOO.alpha)
                                 
                                 res = list(RMSPE.power, p.values.per.dataset)
                                 names(res) = c("RMSPE.power","p.values.per.dataset")
@@ -124,6 +134,6 @@ stopCluster(cl)
 ######################################################################################
 ### save the results ###
 
-sim_results_file = sprintf("Results/SyntheticControls/smoking_power_analysis_loo_test_tau%.1f_alpha%.2f_N%d.RData",
+sim_results_file = sprintf("~/Results/SyntheticControls/smoking_power_analysis_loo_test_tau%.1f_alpha%.2f_N%d.RData",
                            tau, alpha, size.resampled.dataset)
 save(simulation_results, file = sim_results_file)

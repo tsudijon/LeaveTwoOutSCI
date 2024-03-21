@@ -163,6 +163,7 @@ simulation_results <- foreach(mc.run = 1:mc.samples,
         names(res) = c("power.over.time","RMSPE.power",
                        "inexact.power.over.time","inexact.RMSPE.power",
                        "randomized.power.over.time","randomized.RMSPE.power")
+        res
 
     }
 
@@ -173,7 +174,7 @@ stopCluster(cl)
 ######################################################################################
 ### save the results ###
 
-sim_results_file = sprintf("~/Results/SyntheticControls/basque_power_analysis_placebo_test_tau%.1f_alpha%.2f_N%d.RData",
+sim_results_file = sprintf("~/Results/SyntheticControls/basque_power_analysis_random_placebo_test_tau%.1f_alpha%.2f_N%d.RData",
                            tau, alpha, size.resampled.dataset)
 save(simulation_results, file = sim_results_file)
 

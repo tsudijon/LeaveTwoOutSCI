@@ -14,10 +14,10 @@ ml R/3.5.1
 ml gcc
 # size.resampled.dataset, alpha, tau, mc_samples
 
-Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.02 0 20
+Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.05 0 20
 
-Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.02 -30 20
+Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.05 -30 20
 
-Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.02 -60 20
+Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.05 -60 20
 
-Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.02 -90 20
+Rscript smoking_placebotest_poweranalysis_slurm.R 30 0.05 -90 20

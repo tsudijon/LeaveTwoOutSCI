@@ -163,7 +163,7 @@ stopCluster(cl)
 ######################################################################################
 ### save the results ###
 
-sim_results_file = sprintf("Results/SyntheticControls/smoking_power_analysis_placebo_test_tau%.1f_alpha%.2f_N%d.RData",
+sim_results_file = sprintf("~/Results/SyntheticControls/smoking_power_analysis_random_placebo_test_tau%.1f_alpha%.2f_N%d.RData",
                            tau, alpha, size.resampled.dataset)
 save(simulation_results, file = sim_results_file)
 

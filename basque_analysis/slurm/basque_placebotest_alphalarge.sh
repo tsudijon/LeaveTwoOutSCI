@@ -14,10 +14,10 @@ ml R/3.5.1
 ml gcc
 # size.resampled.dataset, alpha, tau, mc_samples
 
-Rscript basque_placebotest_poweranalysis_slurm.R 15 0.05 0 20
+Rscript basque_placebotest_poweranalysis_slurm.R 15 0.1 0 20
 
-Rscript basque_placebotest_poweranalysis_slurm.R 15 0.05 -1.5 20
+Rscript basque_placebotest_poweranalysis_slurm.R 15 0.1 -1.5 20
 
-Rscript basque_placebotest_poweranalysis_slurm.R 15 0.05 -3.0 20
+Rscript basque_placebotest_poweranalysis_slurm.R 15 0.1 -3.0 20
 
-Rscript basque_placebotest_poweranalysis_slurm.R 15 0.05 -4.5 20
+Rscript basque_placebotest_poweranalysis_slurm.R 15 0.1 -4.5 20
